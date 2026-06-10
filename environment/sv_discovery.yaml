@@ -1,0 +1,12 @@
+name: sv_discovery
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - sniffles
+  - cutesv
+  - pbsv
+  - svim
+  - survivor
+  - truvari
+  - pip
