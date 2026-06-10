@@ -1,0 +1,10 @@
+name: imputation
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - beagle
+  - plink
+  - bcftools
+  - R
+  - pip
