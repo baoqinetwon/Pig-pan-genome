@@ -22,7 +22,7 @@ See `docs/gwas_finemapping.md` for how the external association pipeline connect
 
 ## Repository structure
 
-The main scripts are organized into numbered modules under `scripts/`, from graph pangenome construction to functional annotation. See `docs/workflow_overview.md` and `docs/file_description.md` for details.
+The main scripts are organized as top-level numbered modules, from `00_graph_pangenome_construction/` to `14_functional_annotation/`. See `docs/workflow_overview.md` and `docs/file_description.md` for details.
 
 ## Usage notes
 
