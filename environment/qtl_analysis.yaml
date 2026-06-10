@@ -1,0 +1,13 @@
+name: qtl_analysis
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - STAR
+  - RSEM
+  - OmiGA
+  - TensorQTL
+  - plink
+  - R
+  - python
+  - pip
