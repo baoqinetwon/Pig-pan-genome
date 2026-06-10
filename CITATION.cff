@@ -1,0 +1,7 @@
+cff-version: 1.2.0
+message: "If you use this repository, please cite the associated pig graph pangenome and structural variant study."
+title: "Pig graph pangenome and structural variant analysis"
+authors:
+  - family-names: "Bao"
+    given-names: "Qi"
+repository-code: "https://github.com/baoqinetwon/Pig-pan-genome"
