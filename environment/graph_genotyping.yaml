@@ -1,0 +1,11 @@
+name: graph_genotyping
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - vg
+  - samtools
+  - bcftools
+  - plink
+  - python
+  - pip
