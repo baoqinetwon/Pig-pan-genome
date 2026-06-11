@@ -31,6 +31,12 @@ cecum_cis.cis_qtl.txt.gz.txt
 covariate_cecum.txt
 ```
 
+A small demo dataset is provided in:
+
+```text
+10_effect_size_analysis/demo/
+```
+
 ## Main workflow
 
 ### 1. Prepare phased genotype VCF
@@ -104,6 +110,29 @@ If log2 transformation is required before aFC estimation, use:
 ```
 
 Do not specify `--log_xform` twice in the same command. Use either `--log_xform 0` or `--log_xform 1 --log_base 2` depending on the input expression scale.
+
+## Demo dataset
+
+A small example dataset is included under `demo/` to show the expected input formats.
+
+```text
+10_effect_size_analysis/demo/
+├── README.md
+├── demo.phased.vcf
+├── demo.phenotype.bed
+├── demo.evariant.txt
+├── demo_covariant.txt
+└── run_demo_afc.sh
+```
+
+Run the demo with:
+
+```bash
+cd 10_effect_size_analysis/demo
+bash run_demo_afc.sh
+```
+
+The demo files are only intended to illustrate file formats and command structure. Replace them with tissue-specific full datasets for real analyses.
 
 ## Output
 
