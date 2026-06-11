@@ -1,7 +1,18 @@
 # 05_graph_pangenome_construction
 
-Graph pangenome construction, graph-compatible VCF preparation, remap/deduplication, and graph annotation.
+Graph pangenome construction and VG/Giraffe index generation.
 
-This module contains scripts for preparing structural variant calls for graph construction, building the graph pangenome, generating VG/Giraffe indexes, removing duplicated or near-duplicated variants, and annotating graph contigs/scaffolds.
+This module contains scripts for preparing graph-compatible input files, building the graph pangenome, and generating indexes required for graph-based short-read mapping and SV genotyping.
 
-Adapt reference paths, sample lists, thread numbers, and output directories before running.
+## Main workflow
+
+1. Prepare graph-compatible variant input files
+2. Construct the graph pangenome
+3. Generate VG/Giraffe indexes
+4. Prepare graph files for downstream short-read mapping and genotyping
+
+## Notes
+
+- SV call merging and remap/deduplication scripts are not maintained in this module.
+- This directory focuses on graph pangenome construction and index preparation.
+- Adapt reference paths, variant input paths, sample lists, thread numbers, and output directories before running.
