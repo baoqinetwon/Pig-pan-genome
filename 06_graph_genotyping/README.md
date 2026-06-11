@@ -55,15 +55,18 @@ The per-sample graph-genotyped VCF files are then merged and processed using `pa
 
 This script is run after graph-based SV genotyping. It processes the graph-genotyped VCF rather than preparing input before genotyping.
 
+To standardize the representation of graph-derived SVs, the raw graph-genotyped records are further refined using the PanPop Realign and Thin (PART) module. This post-processing step is used to generate a standardized graph-derived SV genotype set for downstream analyses.
+
 Main steps:
 
 1. Merge per-sample graph-genotyped VCFs, if a VCF list is provided
 2. Optionally extract target samples
-3. Retain INS and DEL records
-4. Retain SVs with length >= 50 bp
-5. Retain biallelic records
-6. Simplify VCF fields while retaining genotype calls
-7. Generate a final indexed graph-genotyped VCF
+3. Refine graph-derived SV records using the PanPop Realign and Thin (PART) module
+4. Retain INS and DEL records
+5. Retain SVs with length >= 50 bp
+6. Retain biallelic records
+7. Simplify VCF fields while retaining genotype calls
+8. Generate a final indexed graph-genotyped VCF
 
 Input options:
 
@@ -106,5 +109,5 @@ graph.snarls
 
 - `graph_sv_genotyping.sh` performs sample-level graph mapping and SV genotyping.
 - `panpop_processing.sh` is a downstream post-processing step for the graph-genotyped VCF.
-- The correct order is graph genotyping first, followed by PanPop post-processing.
+- The correct order is graph genotyping first, followed by PanPop PART-based post-processing.
 - Adapt graph index paths, FASTQ paths, graph SV site VCF paths, sample lists, thread numbers, and output directories before running.
