@@ -8,72 +8,47 @@ SV discovery itself is not included in this module. Population-scale ONT SV disc
 01_sv_discovery/multi_sample_sniffles2_calling.sh
 ```
 
-## Input data
+## Main analyses
 
-The main input is a population-level SV VCF after SV discovery and primary quality control.
+This module only retains the following population-genomic analyses:
+
+1. PCA
+2. Phylogeny
+3. Admixture
+4. Fst analysis
+
+## Input data
 
 Typical input files include:
 
-- population-level SV VCF
+- population-level SV genotype file
 - sample information table
 - population or breed grouping file
-- genome chromosome length file
-- optional genomic annotation files
 
-## Main workflow
+## Workflow overview
 
-### 1. SV VCF preprocessing
+### 1. PCA
 
-Prepare the SV VCF for population-genomic analyses.
+Use SV genotypes to perform principal component analysis and summarize the major axes of genetic variation among populations or breeds.
 
-Typical steps include:
+### 2. Phylogeny
 
-- retain autosomal SVs
-- remove low-quality or highly missing variants
-- retain target SV types when needed, such as INS and DEL
-- normalize or simplify variant IDs
-- generate analysis-ready VCF/PLINK files
+Construct phylogenetic relationships among samples or populations based on SV genotype data.
 
-### 2. Allele-frequency and SV distribution analyses
+### 3. Admixture
 
-Summarize SV frequency and genomic distribution across populations or breeds.
+Estimate ancestry components and population structure using SV genotype data.
 
-Typical analyses include:
+### 4. Fst analysis
 
-- allele-frequency estimation
-- breed- or population-level SV counts
-- SV density along chromosomes
-- SV type and length distribution
-
-### 3. Population structure analyses
-
-Use SV genotypes to infer population relationships.
-
-Typical analyses include:
-
-- PCA
-- phylogenetic tree construction
-- admixture or ancestry component analysis
-
-### 4. Population differentiation analyses
-
-Identify differentiated SVs or genomic regions between populations.
-
-Typical analyses include:
-
-- pairwise Fst calculation
-- window-based Fst summarization
-- extraction of highly differentiated SVs or candidate regions
+Calculate population differentiation statistics and identify highly differentiated SVs or genomic regions between populations.
 
 ## Outputs
 
 Typical outputs include:
 
 ```text
-filtered population SV VCFs
-SV allele-frequency tables
-SV density statistics
-PCA input and result files
+PCA result files
 phylogenetic tree files
 admixture result files
 Fst statistics and candidate differentiated regions
@@ -81,7 +56,6 @@ Fst statistics and candidate differentiated regions
 
 ## Notes
 
-- This directory is intended for downstream population-genomic analyses after SV discovery.
-- Population-scale ONT SV calling is handled in `01_sv_discovery/`.
-- PacBio long-read SV detection is handled in `01_sv_discovery/longread_sv_detection.sh`.
+- This directory is intended only for PCA, phylogeny, admixture, and Fst analysis based on SV genotypes.
+- SV discovery is handled in `01_sv_discovery/`.
 - Scripts in this module may require local adjustment of VCF paths, sample grouping files, chromosome names, and software paths before running.
