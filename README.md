@@ -65,7 +65,7 @@ Bao Q†, Wen H†, Zeng L†, Yang L, Wang J, He S, Yin H, Jiang Y, Qu X, Wang 
 ### 👤 Qi Bao
 
 🏛️ Agricultural Genomics Institute at Shenzhen (AGIS), Chinese Academy of Agricultural Sciences, Shenzhen, China.  
-📧 E-mail: yiguoqiang@caas.cn
+📧 E-mail: baoqinetwon@163.com
 
 ### 👤 Dr. Guoqiang Yi
 
