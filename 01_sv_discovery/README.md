@@ -40,18 +40,26 @@ Main output:
 sniffles2_multisample/population/population.sv.vcf.gz
 ```
 
-### 2. SV detection from individual public PacBio long-read datasets
+### 2. PacBio long-read SV detection
 
-`longread_sv_detection.sh` is used for read-based SV discovery from individual PacBio long-read datasets downloaded from published studies or public repositories.
+`longread_sv_detection.sh` is used for per-sample SV detection from PacBio long-read alignments.
 
-This workflow is separate from the population-scale ONT multi-sample calling workflow. It processes each downloaded PacBio sample independently and assumes that sorted BAM files aligned to the reference genome are already available.
+The script supports both PacBio CCS/HiFi and PacBio CLR data:
 
-The script runs multiple SV callers for each sample:
+```bash
+READ_TYPE=HIFI
+READ_TYPE=CLR
+```
 
-- Sniffles2
-- cuteSV
+The workflow includes multiple SV callers and merging steps:
+
 - pbsv
 - SVIM
+- Sniffles2
+- cuteSV
+- Debreak
+- optional IRIS polishing for Debreak VCFs
+- SURVIVOR merge across callers
 
 Input BAM list format:
 
@@ -59,23 +67,59 @@ Input BAM list format:
 sample_id    path/to/sample.sorted.bam
 ```
 
-Example usage:
+A one-column BAM list is also supported; in that case, the sample name is inferred from the BAM filename.
+
+Example usage for PacBio HiFi data:
 
 ```bash
 BAM_LIST=pacbio_bam.list \
-REF=/path/to/reference.fa \
-OUTDIR=public_pacbio_sv_calls \
-THREADS=16 \
+REF=/path/to/Duroc.fa \
+OUTDIR=pacbio_hifi_sv_calls \
+READ_TYPE=HIFI \
+THREADS=56 \
+bash longread_sv_detection.sh
+```
+
+Example usage for PacBio CLR data:
+
+```bash
+BAM_LIST=pacbio_bam.list \
+REF=/path/to/Duroc.fa \
+OUTDIR=pacbio_clr_sv_calls \
+READ_TYPE=CLR \
+THREADS=56 \
 bash longread_sv_detection.sh
 ```
 
 Main outputs:
 
 ```bash
-public_pacbio_sv_calls/sniffles2/${sample}.sniffles2.vcf
-public_pacbio_sv_calls/cutesv/${sample}.cutesv.vcf
-public_pacbio_sv_calls/pbsv/${sample}.pbsv.vcf
-public_pacbio_sv_calls/svim/${sample}/
+${OUTDIR}/pbsv/${sample}.pbsv.vcf
+${OUTDIR}/svim/${sample}/variants.vcf
+${OUTDIR}/sniffles2/${sample}.sniffles2.vcf
+${OUTDIR}/cutesv/${sample}.cutesv.vcf
+${OUTDIR}/debreak/${sample}/
+${OUTDIR}/survivor/${sample}.merged.vcf
+```
+
+Platform-specific cuteSV parameters are used for PacBio HiFi and PacBio CLR data.
+
+For PacBio CLR data:
+
+```text
+--max_cluster_bias_INS 100
+--diff_ratio_merging_INS 0.3
+--max_cluster_bias_DEL 200
+--diff_ratio_merging_DEL 0.5
+```
+
+For PacBio CCS/HiFi data:
+
+```text
+--max_cluster_bias_INS 1000
+--diff_ratio_merging_INS 0.9
+--max_cluster_bias_DEL 1000
+--diff_ratio_merging_DEL 0.5
 ```
 
 ### 3. Assembly-based SV discovery
@@ -85,5 +129,5 @@ Assembly-based SV discovery scripts are used to identify SVs from genome assembl
 ## Notes
 
 - Population ONT SV discovery is performed with Sniffles2 multi-sample mode.
-- Individual public PacBio long-read datasets are processed separately using `longread_sv_detection.sh`.
+- PacBio long-read SV detection is performed per sample using `longread_sv_detection.sh`.
 - This module focuses on SV discovery. Downstream population-genomic analyses, including allele-frequency estimation, SV density visualization, PCA, phylogeny, admixture, and Fst analyses, are maintained in `03_population_sv_analysis/`.
