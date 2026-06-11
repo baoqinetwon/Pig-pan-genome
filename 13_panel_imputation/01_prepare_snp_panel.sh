@@ -3,7 +3,7 @@ set -euo pipefail
 
 # ============================================================
 # 01_prepare_snp_panel.sh
-# Merge SNP VCFs and perform sample-level QC
+# Merge SNP VCFs and perform sample-level QC for PGVRP
 # ============================================================
 
 THREADS=20
@@ -18,7 +18,7 @@ SNP_VCFS=(
 )
 
 HEADER=header.txt
-OUT_PREFIX=panel_3376.genome.snps
+OUT_PREFIX=PGVRP.genome.snps
 
 mkdir -p 01_snp_qc
 
@@ -64,4 +64,4 @@ plink \
 # Manual / downstream step:
 # Remove samples with abnormal heterozygosity, high relatedness, and no overlap with SV samples.
 # Final sample list:
-#   2337_panel.sample.sorted.txt
+#   PGVRP_panel.sample.sorted.txt
