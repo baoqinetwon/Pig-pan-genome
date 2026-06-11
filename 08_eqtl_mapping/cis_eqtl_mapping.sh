@@ -2,50 +2,50 @@
 set -euo pipefail
 
 # ============================================================
-# Joint variant eQTL mapping with OmiGA
+# Joint variant cis-eQTL mapping with OmiGA
 # ============================================================
 # This script performs two steps:
-#   1. Standard cis-QTL mapping
-#   2. Conditional independent cis-QTL mapping
+#   1. Standard cis-QTL mapping by chromosome
+#   2. Multiple-testing correction for cis-QTL results
 #
-# Adapt tissue-specific expression and covariate files before running.
+# Example shown for duodenum tissue. Adapt genotype, phenotype,
+# covariate files, and output directories for other tissues.
 
-THREADS=36
-
-GENOTYPE="../01_raw_gt_maf005_geno01_biallele/02_rmMiss/joint.filled"
-PHENOTYPE="tLiver.expr_tmm_qt.bed.gz"
-COVARIATES="Cov_liver.txt"
+GENOTYPE="02_genotype/joint3.filled"
+PHENOTYPE="01_phenotype/omgia_duodenum.expression.bed.gz"
+COVARIATES="03_covariant/Cov_duodenum.txt"
 PREFIX="joint"
 
-CIS_OUTDIR="01_cis_eqtl"
-COND_OUTDIR="02_condition_independ_cis_eqtl"
+CIS_OUTDIR="j3_duodenum_cis"
+MT_OUTDIR="duodenum_cis_eqtl_joint_clipper"
 
-mkdir -p ${CIS_OUTDIR} ${COND_OUTDIR}
-
-# ------------------------------------------------------------
-# 1. Standard cis-QTL mapping
-# ------------------------------------------------------------
-
-OmiGA \
-    --mode cis \
-    --genotype ${GENOTYPE} \
-    --phenotype ${PHENOTYPE} \
-    --prefix ${PREFIX} \
-    --covariates ${COVARIATES} \
-    --output-dir ${CIS_OUTDIR} \
-    --threads ${THREADS}
+mkdir -p ${CIS_OUTDIR} ${MT_OUTDIR}
 
 # ------------------------------------------------------------
-# 2. Conditional independent cis-QTL mapping
+# 1. Standard cis-QTL mapping by chromosome
 # ------------------------------------------------------------
 
-OmiGA \
-    --mode cis_independent \
-    --genotype ${GENOTYPE} \
-    --phenotype ${PHENOTYPE} \
-    --prefix ${PREFIX} \
-    --covariates ${COVARIATES} \
+seq 1 18 | xargs -I {} -P 8 bash -c '
+    OmiGA --mode cis \
+        --genotype "'${GENOTYPE}'" \
+        --chrom {} \
+        --phenotype "'${PHENOTYPE}'" \
+        --prefix "'${PREFIX}'" \
+        --covariates "'${COVARIATES}'" \
+        --output-dir "'${CIS_OUTDIR}'" \
+        --threads 7 \
+        --calcu-variant-threshold \
+        --permutations 1000 \
+        --rm-collinear-covar 0.95
+'
+
+# ------------------------------------------------------------
+# 2. Multiple-testing correction for cis-QTL mapping results
+# ------------------------------------------------------------
+
+OmiGA --mode cis_mt \
+    --threads 16 \
     --cis-file ${CIS_OUTDIR}/${PREFIX}.cis_qtl.txt.gz \
-    --qtl-map-model a+A \
-    --output-dir ${COND_OUTDIR} \
-    --threads ${THREADS}
+    --multiple-testing clipper \
+    --prefix ${PREFIX} \
+    --output-dir ${MT_OUTDIR}
