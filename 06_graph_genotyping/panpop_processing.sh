@@ -2,19 +2,25 @@
 set -euo pipefail
 
 # ============================================================
-# PanPop post-processing for graph-genotyped VCFs
+# PanPop PART post-processing for graph-genotyped VCFs
 # ============================================================
 # This script is run after graph-based SV genotyping.
 # It processes the genotyped VCF generated from graph-based mapping
 # and SV genotyping, rather than preparing input before genotyping.
 #
+# To standardize the representation of graph-derived SVs, raw records
+# are further refined using the PanPop Realign and Thin (PART) module.
+# The PART-refined graph-genotyped VCF is then filtered and simplified
+# for downstream analyses.
+#
 # Main steps:
 #   1. Merge per-sample genotyped VCFs, if a VCF list is provided
 #   2. Optionally extract target samples
-#   3. Retain INS and DEL records
-#   4. Retain SVs with length >= 50 bp
-#   5. Retain biallelic records
-#   6. Keep genotype information and generate final indexed VCF
+#   3. Refine graph-derived SV records using PanPop Realign and Thin (PART)
+#   4. Retain INS and DEL records
+#   5. Retain SVs with length >= 50 bp
+#   6. Retain biallelic records
+#   7. Keep genotype information and generate final indexed VCF
 #
 # Input options:
 #   GENOTYPED_VCF : already merged graph-genotyped VCF
@@ -22,6 +28,10 @@ set -euo pipefail
 #
 # If VCF_LIST is provided, VCFs are merged first. Otherwise,
 # GENOTYPED_VCF is used directly.
+#
+# Note:
+#   The exact PanPop PART command may vary depending on the local
+#   PanPop installation. Set RUN_PART=1 and edit PART_CMD if needed.
 
 THREADS=${THREADS:-16}
 GENOTYPED_VCF=${GENOTYPED_VCF:-02_graph_genotyping/vcf/graph_sv.genotyped.vcf.gz}
@@ -29,6 +39,11 @@ VCF_LIST=${VCF_LIST:-}
 SAMPLE_LIST=${SAMPLE_LIST:-}
 OUTDIR=${OUTDIR:-03_panpop_processed}
 MIN_SVLEN=${MIN_SVLEN:-50}
+
+# Optional PART settings
+RUN_PART=${RUN_PART:-0}
+PART_CMD=${PART_CMD:-panpop-part}
+REF=${REF:-/path/to/reference.fa}
 
 mkdir -p ${OUTDIR}
 
@@ -68,7 +83,29 @@ if [[ -n "${SAMPLE_LIST}" ]]; then
 fi
 
 # ------------------------------------------------------------
-# 3. Retain INS/DEL SVs and length >= 50 bp
+# 3. Optional PanPop PART refinement
+# ------------------------------------------------------------
+# To standardize graph-derived SV representation, run PanPop Realign
+# and Thin (PART) here. The exact command should be adapted to the
+# local PanPop installation.
+
+if [[ ${RUN_PART} -eq 1 ]]; then
+    echo "Running PanPop PART refinement"
+
+    ${PART_CMD} \
+        --vcf ${INPUT_VCF} \
+        --ref ${REF} \
+        --threads ${THREADS} \
+        --output ${OUTDIR}/graph_sv.genotyped.part.vcf.gz
+
+    tabix -p vcf -f ${OUTDIR}/graph_sv.genotyped.part.vcf.gz
+    INPUT_VCF=${OUTDIR}/graph_sv.genotyped.part.vcf.gz
+else
+    echo "RUN_PART=0; skip PanPop PART command and continue with ${INPUT_VCF}"
+fi
+
+# ------------------------------------------------------------
+# 4. Retain INS/DEL SVs and length >= 50 bp
 # ------------------------------------------------------------
 
 bcftools view \
@@ -83,7 +120,7 @@ bcftools view \
 tabix -p vcf -f ${OUTDIR}/graph_sv.genotyped.ins_del.len${MIN_SVLEN}.vcf.gz
 
 # ------------------------------------------------------------
-# 4. Retain biallelic genotyped SV records
+# 5. Retain biallelic genotyped SV records
 # ------------------------------------------------------------
 
 bcftools view \
@@ -95,7 +132,7 @@ bcftools view \
 tabix -p vcf -f ${OUTDIR}/graph_sv.genotyped.biallelic.vcf.gz
 
 # ------------------------------------------------------------
-# 5. Simplify VCF while retaining genotype calls
+# 6. Simplify VCF while retaining genotype calls
 # ------------------------------------------------------------
 
 bcftools annotate \
