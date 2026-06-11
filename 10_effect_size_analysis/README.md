@@ -1,137 +1,159 @@
 # 10_effect_size_analysis
 
-Allelic fold-change and eQTL effect-size analyses.
+Allelic fold-change (aFC) estimation for cis-eQTL variants.
 
-This module contains scripts and workflow notes for estimating and summarizing the effect sizes of regulatory variants, including SNPs, indels, and structural variants (SVs), across tissues.
+This module describes the effect-size analysis used in this study. The main workflow estimates allelic fold-change for cis-regulatory variant-gene pairs using `aFC.py`, together with phased genotype data, TMM-normalized expression phenotypes, cis-eQTL pair files, and covariates.
 
 ## Purpose
 
-The goal of this module is to quantify the magnitude and direction of variant effects on gene expression. These analyses are used to compare effect-size patterns among variant classes and to evaluate whether SVs tend to have stronger regulatory effects than SNPs or indels.
+The purpose of this module is to quantify the magnitude and direction of cis-regulatory effects. For each cis variant-gene pair, `aFC.py` estimates the allelic fold-change associated with the alternative allele while accounting for covariates.
 
-Effect-size analyses are complementary to eQTL discovery. While eQTL mapping identifies significant variant-gene associations, effect-size analysis focuses on how large and in which direction those effects are.
+This analysis is used to summarize regulatory effect sizes of cis-eQTL variants and compare the relative effect magnitudes of different variant classes when variant annotations are available.
 
 ## Input data
 
 Typical input files include:
 
 ```text
-cis-eQTL summary statistics
-lead eVariant or significant eVariant list
-eGene list
-variant annotation table
-variant class information, such as SNP, indel, and SV
-normalized expression matrix
-sample genotype matrix or dosage file
+phased genotype VCF
+TMM-normalized expression phenotype BED
+cis-eQTL pair file
+covariate file
+sample information or sample map, if required
 ```
 
-For tissue-specific analyses, inputs should be prepared separately for each tissue.
+Example files:
+
+```text
+jx_268_miss01_maf005_biallele.phased2.vcf.gz
+cecum.expr_tmm3.bed.gz
+cecum_cis.cis_qtl.txt.gz.txt
+covariate_cecum.txt
+```
 
 ## Main workflow
 
-### 1. Collect significant eQTL results
+### 1. Prepare phased genotype VCF
 
-Start from cis-eQTL mapping results generated in `08_eqtl_mapping/`.
+The genotype VCF should contain phased genotypes for the samples used in the expression analysis.
 
-Typical input files include:
-
-```text
-nominal cis-eQTL results
-gene-level significant eQTL results
-lead eVariant per eGene
-variant-level effect estimates
-```
-
-The lead eVariant for each eGene can be used to summarize the primary regulatory effect.
-
-### 2. Annotate variant classes
-
-Each eVariant is annotated by variant type.
-
-Typical variant classes include:
-
-- SNP
-- indel
-- SV
-- INS
-- DEL
-- repeat-associated SV
-- non-repeat SV
-
-This step allows comparison of effect-size distributions across variant classes.
-
-### 3. Estimate allelic fold change
-
-Allelic fold change measures the expression difference associated with alternative alleles.
-
-Typical analyses include:
-
-- estimate effect size from genotype-expression regression
-- calculate allelic fold change for significant eVariants
-- summarize effect direction, positive or negative
-- compare absolute effect sizes among SNPs, indels, and SVs
-
-### 4. Summarize lead eVariant effect sizes
-
-For each eGene, the lead eVariant can be selected and used for downstream summary.
-
-Typical summaries include:
-
-- effect-size distribution of lead eSNPs, eIndels, and eSVs
-- absolute effect-size comparison among variant classes
-- tissue-specific effect-size patterns
-- distance between eVariants and transcription start sites
-
-### 5. Compare large-effect and small-effect variants
-
-Variants can be grouped by effect size to evaluate enrichment or biological relevance.
-
-Typical analyses include:
-
-- define large-effect and small-effect eVariants
-- compare functional annotations between effect-size groups
-- evaluate whether SVs are enriched among large-effect regulatory variants
-- summarize effect-size patterns around regulatory genomic features
-
-### 6. Visualize effect-size patterns
-
-Typical figures include:
+Example:
 
 ```text
-boxplots of absolute effect sizes by variant class
-density plots of eQTL effect-size distributions
-distance-to-TSS plots
-LOESS curves of effect size along genomic distance
-barplots of large-effect eVariant proportions
+jx_268_miss01_maf005_biallele.phased2.vcf.gz
 ```
 
-## Outputs
+The VCF sample IDs should match the sample IDs in the expression BED and covariate file.
 
-Typical outputs from this module include:
+### 2. Prepare expression phenotype BED
+
+Expression phenotypes are provided in BED format. In this workflow, TMM-normalized expression values are used as input to `aFC.py`.
+
+Example:
 
 ```text
-variant-class annotated eQTL table
-lead eVariant effect-size table
-allelic fold-change table
-tissue-specific effect-size summaries
-large-effect and small-effect eVariant lists
-effect-size comparison figures
+cecum.expr_tmm3.bed.gz
 ```
 
-## Connection to other modules
+### 3. Prepare cis-eQTL pair file
 
-This module mainly uses outputs from:
+The cis-eQTL pair file defines the variant-gene pairs for which allelic fold-change is estimated.
+
+Example:
 
 ```text
-08_eqtl_mapping/
-09_ase_analysis/
-04_ld_and_feature_annotation/
+cecum_cis.cis_qtl.txt.gz.txt
 ```
 
-The effect-size summaries can be integrated with ASE, chromatin-state annotations, repeat annotations, and SV-eQTL examples to support interpretation of candidate regulatory SVs.
+This file is usually generated from the cis-eQTL mapping results in `08_eqtl_mapping/`.
+
+### 4. Prepare covariates
+
+Covariates are included to account for major confounding factors in expression analysis.
+
+Example:
+
+```text
+covariate_cecum.txt
+```
+
+The covariate file should use the same sample IDs and sample order convention as the expression phenotype file.
+
+### 5. Run `aFC.py`
+
+Example command:
+
+```bash
+python aFC.py \
+    --count_o 1 \
+    --vcf jx_268_miss01_maf005_biallele.phased2.vcf.gz \
+    --pheno cecum.expr_tmm3.bed.gz \
+    --qtl cecum_cis.cis_qtl.txt.gz.txt \
+    --o aFC_cecum_log2afc_datalog2.txt \
+    --cov covariate_cecum.txt \
+    --boot 100 \
+    --log_xform 0
+```
+
+In this example, `--boot 100` performs bootstrap estimation with 100 replicates.
+
+If log2 transformation is required before aFC estimation, use:
+
+```bash
+--log_xform 1 --log_base 2
+```
+
+Do not specify `--log_xform` twice in the same command. Use either `--log_xform 0` or `--log_xform 1 --log_base 2` depending on the input expression scale.
+
+## Output
+
+Main output:
+
+```text
+aFC_cecum_log2afc_datalog2.txt
+```
+
+The output table contains allelic fold-change estimates for cis variant-gene pairs. These estimates can be used to summarize regulatory effect sizes across tissues or variant classes.
+
+## Tissue-specific analysis
+
+The same analysis should be repeated separately for each tissue by replacing the phenotype BED, cis-eQTL pair file, covariate file, and output prefix.
+
+Example template:
+
+```bash
+TISSUE=cecum
+
+python aFC.py \
+    --count_o 1 \
+    --vcf jx_268_miss01_maf005_biallele.phased2.vcf.gz \
+    --pheno ${TISSUE}.expr_tmm3.bed.gz \
+    --qtl ${TISSUE}_cis.cis_qtl.txt.gz.txt \
+    --o aFC_${TISSUE}.txt \
+    --cov covariate_${TISSUE}.txt \
+    --boot 100 \
+    --log_xform 0
+```
+
+## Downstream summary
+
+After obtaining aFC estimates, results can be summarized by:
+
+```text
+variant class, such as SNP, indel, or SV
+tissue
+lead eVariant or significant cis-eQTL pair
+effect direction
+effect magnitude
+absolute allelic fold-change
+```
+
+These summaries can be integrated with cis-eQTL results and variant annotations to compare the regulatory effect sizes of different variant classes.
 
 ## Notes
 
-- Effect-size analysis should be performed separately for each tissue before cross-tissue comparison.
-- Variant class annotation must be consistent with the SV, SNP, and indel definitions used in eQTL mapping.
-- Direction of effect depends on allele coding, so genotype coding and reference/alternative allele definitions should be checked before biological interpretation.
-- Absolute effect size is useful for comparing effect magnitude, whereas signed effect size is needed for interpreting directionality.
+- This module focuses on aFC estimation using `aFC.py`.
+- Expression input in this workflow uses TMM-normalized expression values.
+- Phased genotypes are required for reliable allelic fold-change estimation.
+- Sample IDs must be consistent across genotype VCF, expression BED, QTL pair file, and covariate file.
+- Run the analysis separately for each tissue.
