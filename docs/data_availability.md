@@ -22,6 +22,3 @@ The graph pangenome supporting the findings of this study has been deposited in 
 
 https://doi.org/10.5281/zenodo.15549648
 
-Recommended manuscript wording:
-
-> All processed datasets generated in this study, including the reference genome and annotation files, SV site information, gene read counts, TPM expression matrices, significant variant-gene expression associations, GWAS and fine-mapping summary statistics, SV genotypes of 208 ONT samples, and graph-based SV genotypes of 2,128 short-read samples, are available through the PIGSVOME database Download page (https://pigsvome.bmyjy.org.cn/Help/Download). The graph pangenome supporting the findings of this study has been deposited in Zenodo and is available at https://doi.org/10.5281/zenodo.15549648.
