@@ -13,6 +13,5 @@ This module contains scripts for preparing graph-compatible input files, buildin
 
 ## Notes
 
-- SV call merging and remap/deduplication scripts are not maintained in this module.
 - This directory focuses on graph pangenome construction and index preparation.
 - Adapt reference paths, variant input paths, sample lists, thread numbers, and output directories before running.
