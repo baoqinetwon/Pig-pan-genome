@@ -4,20 +4,21 @@ This repository contains scripts and workflow notes associated with a pig graph 
 
 ## Main analyses covered
 
-The modules are listed below in the logical analysis order used for the study. Folder names retain their current numbered prefixes so that existing paths remain stable.
+The modules are organized as top-level numbered directories following the major analysis order used in the study.
 
 1. Long-read and assembly-based SV discovery (`01_sv_discovery/`)
 2. SNP and Indel discovery (`02_snp_indel_discovery/`)
 3. Population-level SV analysis (`03_population_sv_analysis/`)
 4. LD analysis and genomic feature annotation (`04_ld_and_feature_annotation/`)
-5. Graph pangenome construction (`00_graph_pangenome_construction/`)
-6. Graph-based short-read mapping and SV genotyping (`05_graph_genotyping/`)
+5. Graph pangenome construction (`05_graph_pangenome_construction/`)
+6. Graph-based short-read mapping and SV genotyping (`06_graph_genotyping/`)
 7. RNA-seq expression processing (`07_expression_processing/`)
 8. cis-eQTL mapping (`08_eqtl_mapping/`)
-9. Allele-specific expression analysis (`10_ase_analysis/`)
-10. eQTL effect-size and allelic fold-change analysis (`13_effect_size_analysis/`)
-11. Functional annotation and sequence conservation analysis (`14_functional_annotation/`)
+9. Allele-specific expression analysis (`09_ase_analysis/`)
+10. eQTL effect-size and allelic fold-change analysis (`10_effect_size_analysis/`)
+11. Functional annotation and sequence conservation analysis (`11_functional_annotation/`)
 12. cis-expression heritability partitioning (`12_heritability_partitioning/`)
+13. SV panel construction and imputation evaluation (`13_panel_imputation/`)
 
 ## GWAS and fine-mapping
 
@@ -31,18 +32,19 @@ See `docs/gwas_finemapping.md` for how the external association pipeline connect
 
 | Order | Module | Description |
 |---:|---|---|
-| 1 | `01_sv_discovery/` | Long-read and assembly-based structural variant discovery. |
-| 2 | `02_snp_indel_discovery/` | SNP and Indel discovery from genome assemblies and long-read sequencing. |
-| 3 | `03_population_sv_analysis/` | Population-level SV filtering, allele-frequency estimation, Fst, phylogeny, and population-structure analysis. |
-| 4 | `04_ld_and_feature_annotation/` | LD analysis, genomic feature annotation, enrichment testing, and map visualization. |
-| 5 | `00_graph_pangenome_construction/` | Graph pangenome construction, graph-compatible VCF preparation, and graph annotation. |
-| 6 | `05_graph_genotyping/` | VG/Giraffe-based short-read mapping and graph-based SV genotyping. |
-| 7 | `07_expression_processing/` | RNA-seq quantification, expression normalization, and preparation of expression matrices. |
-| 8 | `08_eqtl_mapping/` | Genotype preprocessing, GRM construction, cis-eQTL mapping, and eQTL visualization. |
-| 9 | `10_ase_analysis/` | Allele-specific expression analysis using RNA-seq and matched genotype data. |
-| 10 | `13_effect_size_analysis/` | Allelic fold-change and eQTL effect-size analyses. |
-| 11 | `14_functional_annotation/` | Functional enrichment and sequence conservation analyses. |
-| 12 | `12_heritability_partitioning/` | cis-expression heritability estimation and variant-class variance-component modeling. |
+| 1 | [`01_sv_discovery/`](01_sv_discovery/) | Long-read and assembly-based structural variant discovery. |
+| 2 | [`02_snp_indel_discovery/`](02_snp_indel_discovery/) | SNP and Indel discovery from genome assemblies and long-read sequencing. |
+| 3 | [`03_population_sv_analysis/`](03_population_sv_analysis/) | Population-level SV filtering, allele-frequency estimation, Fst, phylogeny, and population-structure analysis. |
+| 4 | [`04_ld_and_feature_annotation/`](04_ld_and_feature_annotation/) | LD analysis, genomic feature annotation, enrichment testing, and map visualization. |
+| 5 | [`05_graph_pangenome_construction/`](05_graph_pangenome_construction/) | Graph pangenome construction, graph-compatible VCF preparation, and graph annotation. |
+| 6 | [`06_graph_genotyping/`](06_graph_genotyping/) | VG/Giraffe-based short-read mapping and graph-based SV genotyping. |
+| 7 | [`07_expression_processing/`](07_expression_processing/) | RNA-seq quantification, expression normalization, and preparation of expression matrices. |
+| 8 | [`08_eqtl_mapping/`](08_eqtl_mapping/) | Genotype preprocessing, GRM construction, cis-eQTL mapping, and eQTL visualization. |
+| 9 | [`09_ase_analysis/`](09_ase_analysis/) | Allele-specific expression analysis using RNA-seq and matched genotype data. |
+| 10 | [`10_effect_size_analysis/`](10_effect_size_analysis/) | Allelic fold-change and eQTL effect-size analyses. |
+| 11 | [`11_functional_annotation/`](11_functional_annotation/) | Functional enrichment and sequence conservation analyses. |
+| 12 | [`12_heritability_partitioning/`](12_heritability_partitioning/) | cis-expression heritability estimation and variant-class variance-component modeling. |
+| 13 | [`13_panel_imputation/`](13_panel_imputation/) | SV panel construction, two-step imputation, and imputation accuracy evaluation. |
 
 See `docs/workflow_overview.md` and `docs/file_description.md` for details.
 
