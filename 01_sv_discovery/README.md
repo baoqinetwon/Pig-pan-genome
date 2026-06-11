@@ -130,4 +130,4 @@ Assembly-based SV discovery scripts are used to identify SVs from genome assembl
 
 - Population ONT SV discovery is performed with Sniffles2 multi-sample mode.
 - PacBio long-read SV detection is performed per sample using `longread_sv_detection.sh`.
-- This module focuses on SV discovery. Downstream population-genomic analyses, including allele-frequency estimation, SV density visualization, PCA, phylogeny, admixture, and Fst analyses, are maintained in `03_population_sv_analysis/`.
+
