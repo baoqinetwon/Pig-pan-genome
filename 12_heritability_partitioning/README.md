@@ -1,221 +1,98 @@
 # 12_heritability_partitioning
 
-cis-expression heritability partitioning using variance-component models.
+cis-expression heritability estimation using MPH.
 
-This module contains scripts and workflow notes for estimating cis-expression heritability and partitioning the genetic contribution of different variant classes, including SNPs, indels, and structural variants (SVs). The analysis is based on gene expression phenotypes, cis-window genotype data, genomic relationship matrices (GRMs), and variance-component modeling.
-
-## Purpose
-
-The purpose of this module is to evaluate how much local genetic variation contributes to gene expression variation and to compare the contribution of different variant classes.
-
-The main questions addressed by this module are:
-
-```text
-How much cis-expression heritability can be explained by SNPs?
-How much additional variance can be explained after adding indels or SVs?
-Do SVs provide independent information beyond nearby SNPs and indels?
-How do variant-class-specific contributions differ across tissues?
-```
-
-## Input data
-
-Typical input files include:
-
-```text
-normalized gene expression matrix
-matched genotype files
-cis-window variant sets for each gene
-variant class annotation, such as SNP, indel, and SV
-gene list or eGene list
-sample information and covariates
-GRM files for each variant class or model
-```
-
-Expression and genotype samples must be matched before heritability estimation.
+This module estimates gene-level cis-expression heritability from genotype data and expression phenotypes. The workflow mainly includes GRM construction for each gene, generation of GRM list files, and REML-based heritability estimation using `mph`.
 
 ## Main workflow
 
-### 1. Prepare expression phenotypes
+### 1. Build GRMs for each gene
 
-Expression phenotypes are prepared separately for each tissue.
+Each `*.id` file contains the variant list used to build a gene-specific GRM. GRMs are generated from the binary genotype file using `mph --make_grm`.
 
-Typical inputs are normalized gene expression values generated from `07_expression_processing/`, for example:
-
-```text
-muscle.gene.txt
-liver.gene.txt
-duodenum.gene.txt
+```bash
+ls *.id | xargs -I {} -P 56 sh -c '
+    mph --make_grm \
+        --binary_genotype ~/SVanalysis/04_RNA-SEQ/qtTMM/06_eqtl/02_genotype/joint \
+        --snp_info {} \
+        --num_threads 14 \
+        --out 01_grm/{}
+'
 ```
 
-For eGene-focused analyses, the gene list can be restricted to significant eGenes identified in `08_eqtl_mapping/`.
-
-### 2. Define cis windows for each gene
-
-For each gene, nearby variants within a cis region are selected for heritability estimation.
-
-A typical cis-window definition is:
+Main inputs:
 
 ```text
-variants within +/- 1 Mb of the gene transcription start site or gene body
+*.id                                  Variant list for each gene
+joint                                 Binary genotype prefix
 ```
 
-The same cis-window definition should be used consistently across SNPs, indels, and SVs.
-
-### 3. Split variants by class
-
-Variants are separated into different classes before GRM construction.
-
-Common variant classes include:
+Main outputs:
 
 ```text
-SNP
-INDEL
-SV
-SNP + INDEL
-SNP + INDEL + SV
+01_grm/*.grm.bin
+01_grm/*.grm.N.bin
+01_grm/*.grm.iid
 ```
 
-Depending on the analysis design, SVs can also be stratified by LD with nearby SNPs, repeat annotation, or other features.
+### 2. Generate GRM list files
 
-### 4. Construct GRMs
+For each GRM, generate a list file used as `--grm_list` input for MPH REML.
 
-For each gene and each variant class or combined model, a genomic relationship matrix is constructed from the corresponding cis variants.
+```bash
+cd 01_grm
 
-Typical model inputs include:
+ls ./*.grm.iid | xargs -I {} -P 56 sh -c '
+    id=$(basename "{}" .grm.iid)
+    echo "./01_grm/$id" > "${id}.list"
+'
+```
+
+Each `${id}.list` contains the prefix of one gene-specific GRM.
+
+### 3. Estimate cis-expression heritability
+
+Heritability is estimated with `mph --reml` using the GRM list, tissue-specific expression phenotype, and covariates.
+
+Example for liver:
+
+```bash
+mkdir 04_result_l
+
+ls *list | xargs -I {} -P 52 sh -c '
+    file="{}"
+    id=$(basename "$file" .bed.eachgene.vcf.id.list)
+
+    mph --reml \
+        --grm_list "$file" \
+        --phenotype /public/home/baoqi/SVanalysis/04_RNA-SEQ/qtTMM/01_mph_phenotype/Liver.mph.csv \
+        --covariate_file /public/home/baoqi/SVanalysis/04_RNA-SEQ/qtTMM/02_covariant/Cov_liver.csv \
+        --covariate_names all \
+        --trait "$id" \
+        --num_threads 1 \
+        --num_random 500 \
+        --out "04_result_l/${id}.snp_indel_sv"
+'
+```
+
+Main inputs:
 
 ```text
-SNP GRM
-INDEL GRM
-SV GRM
-SNP + INDEL GRM
-SNP + INDEL + SV GRM
+GRM list file
+Liver.mph.csv
+Cov_liver.csv
+gene ID used as --trait
 ```
 
-The GRM construction step should use the same sample order as the expression phenotype file.
-
-### 5. Estimate cis-expression heritability
-
-Variance-component models are fitted to estimate the proportion of expression variance explained by each variant class.
-
-Typical models include:
+Main outputs:
 
 ```text
-SNP-only model
-SNP + INDEL model
-SNP + SV model
-SNP + INDEL + SV model
+04_result_l/${id}.snp_indel_sv.*
 ```
-
-For each gene, the model estimates variance components and reports the heritability contribution of each GRM.
-
-### 6. Filter converged models
-
-Model convergence should be checked before downstream summary.
-
-Typical convergence criteria used in the analysis include:
-
-```text
-dLLpred < 0.01
-dogleg_Newton > 0.999
-```
-
-Variance-component estimates are further filtered to keep valid values:
-
-```text
-0 < h2 < 1
-```
-
-Genes or models that do not pass convergence or valid-range filters should be excluded from final summaries.
-
-### 7. Apply diagonal correction when needed
-
-When GRM diagonals differ among variant classes, variance-component estimates can be adjusted using diagonal statistics.
-
-A typical correction is:
-
-```text
-adjusted PVE = raw PVE x GRM diagonal statistic
-```
-
-The diagonal correction helps make variance-component estimates more comparable across different GRMs.
-
-### 8. Compare nested or alternative models
-
-Model comparison is used to evaluate whether adding a variant class improves model fit.
-
-Typical comparisons include:
-
-```text
-SNP-only vs SNP + INDEL
-SNP-only vs SNP + SV
-SNP + INDEL vs SNP + INDEL + SV
-```
-
-For log-likelihood based comparisons, likelihood-ratio statistics can be calculated as:
-
-```text
-LRT = 2 x (logLL_full - logLL_reduced)
-```
-
-These comparisons can be summarized across genes and tissues to evaluate the additional contribution of SVs or indels.
-
-### 9. Summarize heritability estimates
-
-Final summaries are generated after convergence filtering and optional diagonal correction.
-
-Typical summaries include:
-
-```text
-mean h2 by variant class
-median h2 by variant class
-distribution of h2 across genes
-delta h2 relative to SNP-only model
-delta log-likelihood relative to SNP-only model
-tissue-specific h2 comparison
-```
-
-## Outputs
-
-Typical outputs from this module include:
-
-```text
-per-gene variance-component result files
-per-gene h2 estimates for SNP, indel, and SV components
-model log-likelihood summary tables
-convergence-filtered gene lists
-diagonal-corrected PVE tables
-summary tables by tissue and model
-boxplots or violin plots of h2 and delta h2
-model-comparison plots based on delta logLL or LRT
-```
-
-## Example interpretation
-
-A typical interpretation is:
-
-```text
-If the SNP + INDEL + SV model explains more cis-expression variance or has a higher log-likelihood than the SNP-only model, the added variant class may capture regulatory effects not fully tagged by SNPs.
-```
-
-However, model interpretation should consider variant density, LD structure, convergence, GRM quality, and sample size.
-
-## Connection to other modules
-
-This module uses outputs from:
-
-```text
-07_expression_processing/
-08_eqtl_mapping/
-04_ld_and_feature_annotation/
-```
-
-It can also be integrated with SV annotation, LD analysis, and eQTL effect-size analysis to interpret the contribution of SVs to gene expression regulation.
 
 ## Notes
 
-- Heritability partitioning should be performed separately for each tissue.
-- Sample order must be identical across expression phenotypes, genotype matrices, and GRMs.
-- The same cis-window definition should be used across variant classes.
-- Convergence filtering is essential before summarizing h2 estimates.
-- When comparing models, use the same gene set across models to avoid biased summaries.
-- Variant-class contributions should be interpreted together with LD patterns and variant counts.
+- `*.id` files should contain the variant set used for each gene.
+- The sample order in genotype, phenotype, covariate, and GRM files must be consistent.
+- The `--trait` name should match the gene ID in the MPH phenotype file.
+- This example uses liver expression phenotypes; other tissues can be analyzed by replacing the phenotype file, covariate file, and output directory.
