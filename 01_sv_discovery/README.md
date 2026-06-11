@@ -1,5 +1,50 @@
 # 01_sv_discovery
 
-Long-read and assembly-based structural variant discovery.
+This module contains scripts for long-read and assembly-based structural variant discovery.
 
-This module includes scripts for calling SVs from HiFi/CLR/ONT reads or genome assemblies, filtering insertion records without sequence, and comparing read-based and assembly-based SV discovery results.
+## Main workflows
+
+### 1. Population-scale ONT SV discovery using Sniffles2
+
+`multi_sample_sniffles2_calling.sh` is used for multi-sample SV calling from population-scale ONT data.
+
+The workflow includes two steps:
+
+1. Generate one `.snf` file for each ONT sample using Sniffles2
+2. Jointly call SVs across all samples from the SNF file list
+
+Input BAM list format:
+
+```text
+sample_id    path/to/sample.bam
+```
+
+Example:
+
+```text
+Duroc001     01_bam/Duroc001.ont.minimap2.bam
+```
+
+Example usage:
+
+```bash
+BAM_LIST=bam.list \
+OUTDIR=sniffles2_multisample \
+THREADS=16 \
+bash multi_sample_sniffles2_calling.sh
+```
+
+Main output:
+
+```bash
+sniffles2_multisample/population/population.sv.vcf.gz
+```
+
+### 2. Assembly-based SV discovery
+
+Assembly-based SV discovery scripts are used to identify SVs from genome assemblies and compare read-based and assembly-based SV discovery results.
+
+## Notes
+
+- Population ONT SV discovery is performed with Sniffles2 multi-sample mode.
+- This module focuses on SV discovery. Downstream population-genomic analyses, including allele-frequency estimation, SV density visualization, PCA, phylogeny, admixture, and Fst analyses, are maintained in `03_population_sv_analysis/`.
