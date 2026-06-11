@@ -19,7 +19,7 @@ for CHR in {1..18}
 do
     echo "Summarizing imputation results for chromosome ${CHR}"
 
-    IMPUTED=${INDIR}/${TARGET_PREFIX}.panel_2337.chr${CHR}.snp.sv.imputed.vcf.gz
+    IMPUTED=${INDIR}/${TARGET_PREFIX}.PGVRP.chr${CHR}.snp.sv.imputed.vcf.gz
 
     # 1. Reheader and add MAF tag
     bcftools reheader \
