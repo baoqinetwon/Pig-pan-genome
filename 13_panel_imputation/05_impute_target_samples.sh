@@ -3,7 +3,7 @@ set -euo pipefail
 
 # ============================================================
 # 05_impute_target_samples.sh
-# Impute target samples using the phased SNP-SV reference panel
+# Impute target samples using the phased PGVRP SNP-SV reference panel
 # ============================================================
 
 THREADS=10
@@ -26,8 +26,8 @@ do
 
     java -jar ${BEAGLE} \
         gt=${TARGET_DIR}/${TARGET_PREFIX}.chr${CHR}.vcf.gz \
-        ref=${REFDIR}/panel_2337.chr${CHR}.snp.sv.phased.final.vcf.gz \
-        out=${OUTDIR}/${TARGET_PREFIX}.panel_2337.chr${CHR}.snp.sv.imputed \
+        ref=${REFDIR}/PGVRP.chr${CHR}.snp.sv.phased.final.vcf.gz \
+        out=${OUTDIR}/${TARGET_PREFIX}.PGVRP.chr${CHR}.snp.sv.imputed \
         impute=true \
         ap=true \
         gp=true \
