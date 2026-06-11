@@ -4,21 +4,21 @@ set -euo pipefail
 # ============================================================
 # Graph-based short-read mapping and SV genotyping
 # ============================================================
-# This script maps short-read sequencing data to the graph pangenome
-# using VG/Giraffe and extracts graph-based SV genotypes.
+# This script performs graph-based short-read mapping and SV genotyping.
+# The resulting graph-genotyped VCF is then processed by
+# panpop_processing.sh in the next step.
 #
 # Main steps:
 #   1. Map paired-end short reads with vg giraffe
-#   2. Convert GAM to sorted BAM/CRAM if needed
-#   3. Pack read support on graph paths
-#   4. Call graph-based genotypes with vg call
-#   5. Filter and index the output VCF
+#   2. Pack read support on graph paths
+#   3. Call graph-based SV genotypes with vg call
+#   4. Compress and index per-sample VCF files
 #
 # Input FASTQ list format:
 #   sample_id    read1.fq.gz    read2.fq.gz
 #
 # Required graph index files:
-#   XG, GBWT, GGBWT/GBZ, MIN, DIST, and related VG/Giraffe indexes
+#   XG, GBZ, MIN, DIST, SNARLS, and related VG/Giraffe indexes
 
 THREADS=${THREADS:-16}
 FASTQ_LIST=${FASTQ_LIST:-fastq.list}
@@ -31,8 +31,10 @@ MIN=${MIN:-graph.min}
 DIST=${DIST:-graph.dist}
 SNARLS=${SNARLS:-graph.snarls}
 
-# Processed SV VCF from panpop_processing.sh
-SV_VCF=${SV_VCF:-01_panpop_processed/panpop.sv.processed.vcf.gz}
+# Variant sites included in the graph and used for genotype extraction.
+# This file should correspond to the graph-compatible SV site VCF generated
+# during graph pangenome construction.
+GRAPH_SV_SITE_VCF=${GRAPH_SV_SITE_VCF:-graph_sv_sites.vcf.gz}
 
 mkdir -p ${OUTDIR}/{gam,pack,vcf,log}
 
@@ -75,22 +77,13 @@ while read -r sample fq1 fq2
         -r ${SNARLS} \
         -k ${OUTDIR}/pack/${sample}.pack \
         -s ${sample} \
-        -v ${SV_VCF} \
+        -v ${GRAPH_SV_SITE_VCF} \
         -t ${THREADS} \
         > ${OUTDIR}/vcf/${sample}.graph_sv.raw.vcf
 
     bgzip -@ ${THREADS} -f ${OUTDIR}/vcf/${sample}.graph_sv.raw.vcf
     tabix -p vcf -f ${OUTDIR}/vcf/${sample}.graph_sv.raw.vcf.gz
-
-    # ------------------------------------------------------------
-    # 4. Basic VCF filtering and normalization
-    # ------------------------------------------------------------
-
-    bcftools view \
-        --threads ${THREADS} \
-        -i 'GT!="./."' \
-        ${OUTDIR}/vcf/${sample}.graph_sv.raw.vcf.gz \
-        -Oz -o ${OUTDIR}/vcf/${sample}.graph_sv.filtered.vcf.gz
-
-    tabix -p vcf -f ${OUTDIR}/vcf/${sample}.graph_sv.filtered.vcf.gz
  done < ${FASTQ_LIST}
+
+# The per-sample VCFs can be merged and further processed with:
+#   bash panpop_processing.sh
