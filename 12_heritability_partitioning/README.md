@@ -4,11 +4,39 @@ cis-expression heritability estimation using MPH.
 
 This module estimates gene-level cis-expression heritability from genotype data and expression phenotypes. The workflow mainly includes GRM construction for each gene, generation of GRM list files, and REML-based heritability estimation using `mph`.
 
+In this analysis, five gene-level models were compared by constructing GRMs from different variant sets:
+
+```text
+snp
+indel
+sv
+snp + indel
+snp + indel + sv
+```
+
+These models were used to evaluate the cis-expression heritability explained by each variant class and by combined variant classes.
+
 ## Main workflow
 
-### 1. Build GRMs for each gene
+### 1. Prepare gene-level variant ID files
 
-Each `*.id` file contains the variant list used to build a gene-specific GRM. GRMs are generated from the binary genotype file using `mph --make_grm`.
+For each gene, variant ID files are prepared separately according to variant class or model.
+
+Example file types:
+
+```text
+${gene}.snp.id
+${gene}.indel.id
+${gene}.sv.id
+${gene}.snp_indel.id
+${gene}.snp_indel_sv.id
+```
+
+Each `.id` file contains the variants used to construct one gene-specific GRM.
+
+### 2. Build GRMs for each gene and model
+
+GRMs are generated from the binary genotype file using `mph --make_grm`.
 
 ```bash
 ls *.id | xargs -I {} -P 56 sh -c '
@@ -23,7 +51,7 @@ ls *.id | xargs -I {} -P 56 sh -c '
 Main inputs:
 
 ```text
-*.id                                  Variant list for each gene
+*.id                                  Variant list for each gene and model
 joint                                 Binary genotype prefix
 ```
 
@@ -35,7 +63,7 @@ Main outputs:
 01_grm/*.grm.iid
 ```
 
-### 2. Generate GRM list files
+### 3. Generate GRM list files
 
 For each GRM, generate a list file used as `--grm_list` input for MPH REML.
 
@@ -50,7 +78,7 @@ ls ./*.grm.iid | xargs -I {} -P 56 sh -c '
 
 Each `${id}.list` contains the prefix of one gene-specific GRM.
 
-### 3. Estimate cis-expression heritability
+### 4. Estimate cis-expression heritability
 
 Heritability is estimated with `mph --reml` using the GRM list, tissue-specific expression phenotype, and covariates.
 
@@ -87,12 +115,37 @@ gene ID used as --trait
 Main outputs:
 
 ```text
+04_result_l/${id}.snp.*
+04_result_l/${id}.indel.*
+04_result_l/${id}.sv.*
+04_result_l/${id}.snp_indel.*
 04_result_l/${id}.snp_indel_sv.*
 ```
 
+### 5. Compare five models
+
+The five models are compared at the gene level and then summarized across genes within each tissue.
+
+```text
+snp model              GRM built from SNPs only
+indel model            GRM built from indels only
+sv model               GRM built from SVs only
+snp_indel model        GRM built from SNPs and indels
+snp_indel_sv model     GRM built from SNPs, indels, and SVs
+```
+
+For each gene, the estimated h2 from different models can be extracted and combined into a summary table:
+
+```text
+gene    snp    indel    sv    snp_indel    snp_indel_sv
+```
+
+This table is then used to compare the cis-expression heritability explained by different variant classes and combined models.
+
 ## Notes
 
-- `*.id` files should contain the variant set used for each gene.
+- `*.id` files should contain the variant set used for each gene and model.
 - The sample order in genotype, phenotype, covariate, and GRM files must be consistent.
 - The `--trait` name should match the gene ID in the MPH phenotype file.
 - This example uses liver expression phenotypes; other tissues can be analyzed by replacing the phenotype file, covariate file, and output directory.
+- For fair model comparison, the same gene set should be used across the five models whenever possible.
