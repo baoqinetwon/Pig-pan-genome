@@ -146,6 +146,21 @@ OmiGA --mode cis \
     --output-dir j3_duodenum_cis
 ```
 
+## Software installation
+
+RNA-seq processing tools can be installed with conda:
+
+```bash
+conda create -n expression_processing -c conda-forge -c bioconda \
+    fastp=0.22.0 star=2.7.9a subread=2.0.6 stringtie=2.1.7 samtools
+```
+
+R packages for expression normalization and matrix processing can be installed in R as needed:
+
+```r
+install.packages(c("data.table", "dplyr", "tidyr"))
+```
+
 ## Notes
 
 - Expression processing should be performed separately for each tissue.
