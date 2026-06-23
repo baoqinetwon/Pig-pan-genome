@@ -117,6 +117,26 @@ bash run_13_panel_imputation.sh
 
 Target-sample imputation and summary extraction should be run after target SNP VCFs are prepared.
 
+## Software installation
+
+Beagle and BCFtools can be installed as follows:
+
+```bash
+conda create -n panel_imputation -c conda-forge -c bioconda bcftools=1.13 openjdk
+```
+
+Download Beagle v5.4 from the official Beagle release page and run it with Java:
+
+```bash
+java -jar beagle.5.4.jar
+```
+
+PLINK2 is also useful for SNP-panel QC:
+
+```bash
+conda install -c bioconda plink2
+```
+
 ## Notes
 
 - `PGVRP` is used consistently as the reference panel name in this directory.
