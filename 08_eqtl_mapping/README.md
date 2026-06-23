@@ -56,6 +56,17 @@ COVARIATES="Cov_liver.txt"
 OUTDIR="02_condition_independ_cis_eqtl"
 ```
 
+## Software installation
+
+OmiGA was used for cis-eQTL mapping:
+
+```bash
+conda create -n eqtl_mapping -c conda-forge -c bioconda bcftools=1.13
+pip install OmiGA==1.0.2
+```
+
+If OmiGA is installed from source in the local environment, replace the `pip install` command with the corresponding project installation command.
+
 ## Notes
 
 - Replace the genotype, phenotype, covariate, and output paths according to tissue and analysis batch.
