@@ -142,6 +142,27 @@ gene    snp    indel    sv    snp_indel    snp_indel_sv
 
 This table is then used to compare the cis-expression heritability explained by different variant classes and combined models.
 
+## Software installation
+
+MPH was used for cis-expression heritability estimation:
+
+```bash
+conda create -n mph_h2 -c conda-forge -c bioconda bcftools=1.13 plink2
+```
+
+Install MPH from the project release or source package used in the analysis environment:
+
+```bash
+git clone <MPH_repository_url>
+# then follow the MPH build or installation instructions
+```
+
+For small-effect contribution partitioning, GCTA can be installed separately:
+
+```bash
+conda install -c bioconda gcta
+```
+
 ## Notes
 
 - `*.id` files should contain the variant set used for each gene and model.
