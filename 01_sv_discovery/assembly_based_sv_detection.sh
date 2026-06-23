@@ -1,25 +1,39 @@
 #!/usr/bin/env bash
-# Assembly-based SV detection using whole-genome alignments.
-# Adapt assembly list, reference genome, and output directory before running.
+# nucmer + Assemblytics based assembly SV detection.
 set -euo pipefail
 
-ASSEMBLY_LIST=${ASSEMBLY_LIST:-assemblies.list}
-REF=${REF:-/path/to/reference.fa}
-OUTDIR=${OUTDIR:-assembly_sv_detection}
-THREADS=${THREADS:-16}
+REF=${REF:-/public/home/baoqi/assembly/Duroc/Duroc.fa}
+ASSEMBLY_DIR=${ASSEMBLY_DIR:-../accession_genome}
+THREADS=${THREADS:-56}
+ASSEMBLYTICS=${ASSEMBLYTICS:-${HOME}/software/Assemblytics-1.2.1/scripts/Assemblytics}
 
-mkdir -p ${OUTDIR}/{alignments,sv_calls}
+# Assemblytics parameters
+UNIQUE_ANCHOR_LENGTH=${UNIQUE_ANCHOR_LENGTH:-500}
+MIN_VARIANT_SIZE=${MIN_VARIANT_SIZE:-50}
+MAX_VARIANT_SIZE=${MAX_VARIANT_SIZE:-100500}
 
-while read -r sample assembly; do
-  # Whole-genome alignment with minimap2.
-  minimap2 -t ${THREADS} -ax asm5 ${REF} ${assembly} \
-    | samtools sort -@ ${THREADS} -o ${OUTDIR}/alignments/${sample}.bam
-  samtools index ${OUTDIR}/alignments/${sample}.bam
+# SURVIVOR convertAssemblytics parameter
+SURVIVOR_MIN_SIZE=${SURVIVOR_MIN_SIZE:-50}
 
-  # SV calling from assembly-to-reference alignment.
-  sniffles \
-    --input ${OUTDIR}/alignments/${sample}.bam \
-    --vcf ${OUTDIR}/sv_calls/${sample}.assembly.sv.vcf \
-    --threads ${THREADS} \
-    --sample-id ${sample}
-done < ${ASSEMBLY_LIST}
+# nucmer + Assemblytics
+ls "${ASSEMBLY_DIR}"/*fa | while read -r id; do
+  file=$(basename "${id}")
+  sample=${file%%.*}
+  echo "${file} ${sample}"
+
+  nucmer --maxmatch -l 500 -c 500 -t "${THREADS}" \
+    "${REF}" "${id}" \
+    --prefix="${sample}"
+
+  "${ASSEMBLYTICS}" \
+    "${sample}.delta" \
+    "${sample}" \
+    "${UNIQUE_ANCHOR_LENGTH}" \
+    "${MIN_VARIANT_SIZE}" \
+    "${MAX_VARIANT_SIZE}"
+
+  SURVIVOR convertAssemblytics \
+    "${sample}.Assemblytics_structural_variants.bed" \
+    "${SURVIVOR_MIN_SIZE}" \
+    "${sample}"
+done
