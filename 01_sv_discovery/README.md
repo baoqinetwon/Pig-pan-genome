@@ -138,6 +138,13 @@ conda create -n sv_discovery -c conda-forge -c bioconda \
 pip install debreak==1.0.2 iris==1.0.2
 ```
 
+Short-read SV callers used for comparison can be installed in a separate environment:
+
+```bash
+conda create -n short_read_sv -c conda-forge -c bioconda \
+    manta=1.6.0 delly=0.7.6 wham=1.7.0 lumpy-sv=0.2.13
+```
+
 Assemblytics can be installed from the project repository:
 
 ```bash
