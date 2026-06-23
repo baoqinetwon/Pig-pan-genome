@@ -58,17 +58,32 @@ OUTDIR="02_condition_independ_cis_eqtl"
 
 ## Software installation
 
-OmiGA was used for cis-eQTL mapping:
+OmiGA was used for cis-eQTL mapping. According to the official OmiGA documentation, OmiGA should be installed by downloading the precompiled binaries and configuring the executable following the installation manual:
+
+```text
+https://omiga.bio/#/Download
+https://omiga.bio/#/Installation
+```
+
+A typical setup is:
+
+```bash
+# Download the OmiGA binary package from the official download page,
+# then unpack it and add the executable directory to PATH.
+export PATH=/path/to/OmiGA/bin:$PATH
+
+OmiGA --help
+```
+
+Other command-line dependencies can be installed with conda:
 
 ```bash
 conda create -n eqtl_mapping -c conda-forge -c bioconda bcftools=1.13
-pip install OmiGA==1.0.2
 ```
-
-If OmiGA is installed from source in the local environment, replace the `pip install` command with the corresponding project installation command.
 
 ## Notes
 
 - Replace the genotype, phenotype, covariate, and output paths according to tissue and analysis batch.
+- Install OmiGA from the official precompiled binary package rather than from `pip`.
 - The `cis_eqtl_mapping.sh` script is used for standard cis-eQTL discovery and multiple-testing correction.
 - The `conditional_independent_cis_eqtl.sh` script is used as a separate downstream step for conditional independent cis-QTL mapping.
