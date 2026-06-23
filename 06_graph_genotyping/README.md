@@ -105,6 +105,20 @@ graph.dist
 graph.snarls
 ```
 
+## Software installation
+
+Install vg and BCFtools with conda:
+
+```bash
+conda create -n graph_genotyping -c conda-forge -c bioconda vg=1.51.0 bcftools=1.13
+```
+
+Install PanPop from the project repository used in the analysis environment:
+
+```bash
+git clone <PanPop_repository_url>
+```
+
 ## Notes
 
 - `graph_sv_genotyping.sh` performs sample-level graph mapping and SV genotyping.
