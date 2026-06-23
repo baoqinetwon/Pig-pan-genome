@@ -119,6 +119,13 @@ Install PanPop from the project repository used in the analysis environment:
 git clone <PanPop_repository_url>
 ```
 
+For graph-genotyping performance evaluation, the following tools can be installed separately:
+
+```bash
+conda create -n graph_eval -c conda-forge -c bioconda truvari art
+pip install simuG
+```
+
 ## Notes
 
 - `graph_sv_genotyping.sh` performs sample-level graph mapping and SV genotyping.
