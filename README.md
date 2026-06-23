@@ -56,6 +56,10 @@ Most scripts contain study-specific file names, paths, and sample lists from the
 
 Large data files, indexed annotation tracks, and real result matrices are not stored in this GitHub repository. See `docs/data_availability.md` and the associated manuscript/database for genotype, SV, eQTL, GWAS, and RNA-seq resources.
 
+## License
+
+This project is licensed under the BSD 3-Clause License. See the `LICENSE` file for details.
+
 ## Citation
 
 Please cite the associated manuscript when using this repository:
