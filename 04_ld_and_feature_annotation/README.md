@@ -38,6 +38,23 @@ http://genome.ucsc.edu/s/zhypan/susScr11_15_state_14_tissues_new
 
 These chromatin state annotations were used to evaluate SV enrichment in regulatory genomic features across pig tissues.
 
+## Software installation
+
+Common tools used in this module can be installed with conda:
+
+```bash
+conda create -n ld_annotation -c conda-forge -c bioconda \
+    bedtools=2.30.0 bcftools=1.13 vcftools=0.1.16 plink2
+```
+
+R packages for enrichment and visualization can be installed in R:
+
+```r
+install.packages(c("LOLA", "regioneR"))
+```
+
+If Bioconductor packages are required, install them with `BiocManager::install()`.
+
 ## Notes
 
 - LD can be calculated using either physical-distance windows or variant-count windows.
