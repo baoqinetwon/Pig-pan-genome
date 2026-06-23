@@ -54,6 +54,23 @@ admixture result files
 Fst statistics and candidate differentiated regions
 ```
 
+## Software installation
+
+Main command-line tools can be installed with conda:
+
+```bash
+conda create -n population_sv -c conda-forge -c bioconda \
+    plink2 vcftools=0.1.16 phylip=3.697 admixture=1.3.0
+```
+
+R packages used for tree visualization and enrichment can be installed in R:
+
+```r
+install.packages("gprofiler2")
+if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
+BiocManager::install("ggtree")
+```
+
 ## Notes
 
 - This directory is intended only for PCA, phylogeny, admixture, and Fst analysis based on SV genotypes.
