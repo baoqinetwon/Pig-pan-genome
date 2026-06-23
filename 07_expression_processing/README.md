@@ -91,19 +91,7 @@ A minimum of 10 samples was also required when applying the sample-count thresho
 
 After expression filtering, gene expression levels were quantile-normalized for downstream cis-eQTL mapping.
 
-In this study, quantile normalization was performed in R using the `qqnorm` function. For each gene, expression values across samples were transformed to normal quantiles.
-
-Example R code:
-
-```r
-qqnorm_normalize <- function(x) {
-    if (all(is.na(x))) return(x)
-    r <- rank(x, ties.method = "average", na.last = "keep")
-    qnorm((r - 0.5) / sum(!is.na(x)))
-}
-
-expr_qn <- t(apply(expr_matrix, 1, qqnorm_normalize))
-```
+In this study, quantile normalization was performed in R using the `qqnorm` function.
 
 Common outputs include:
 
