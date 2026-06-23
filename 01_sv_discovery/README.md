@@ -126,8 +126,27 @@ For PacBio CCS/HiFi data:
 
 Assembly-based SV discovery scripts are used to identify SVs from genome assemblies and compare read-based and assembly-based SV discovery results.
 
+## Software installation
+
+The key tools can be installed with conda or pip when available. Some tools, such as Guppy and pbsv, are usually installed from the vendor or project release package.
+
+```bash
+conda create -n sv_discovery -c conda-forge -c bioconda \
+    ngmlr=0.2.7 sniffles=2.0.7 survivor=1.0.7 \
+    pbsv=2.9.0 cutesv=2.0.3 mummer4=4.0.0 bedtools=2.30.0
+
+pip install debreak==1.0.2 iris==1.0.2
+```
+
+Assemblytics can be installed from the project repository:
+
+```bash
+git clone https://github.com/MariaNattestad/Assemblytics.git
+```
+
+Guppy should be installed from the Oxford Nanopore release package matching the sequencing environment, for example Guppy v6.3.
+
 ## Notes
 
 - Population ONT SV discovery is performed with Sniffles2 multi-sample mode.
 - PacBio long-read SV detection is performed per sample using `longread_sv_detection.sh`.
-
