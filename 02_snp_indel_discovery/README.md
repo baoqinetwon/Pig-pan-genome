@@ -114,6 +114,20 @@ run_clair3.sh \
 02_variant_calling/${SAMPLE}.ont.clair3/
 ```
 
+## Software installation
+
+For ONT SNP calling, Clair3 and GLnexus can be installed as follows:
+
+```bash
+conda create -n snp_indel -c conda-forge -c bioconda clair3=1.1.0 glnexus=1.4.1
+```
+
+For PacBio HiFi SNP/Indel calling, DeepVariant is usually run with the official Docker or Singularity image. pbmm2 can be installed with conda:
+
+```bash
+conda install -c bioconda pbmm2
+```
+
 ## Notes
 
 - PacBio HiFi SNP/Indel calling uses DeepVariant with the `PACBIO` model.
