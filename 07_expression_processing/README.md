@@ -40,9 +40,9 @@ Typical steps include:
 - summarize sequencing quality for each sample
 - confirm sample and tissue labels
 
-### 2. RNA-seq alignment or transcript quantification
+### 2. RNA-seq alignment and transcript quantification
 
-Clean RNA-seq reads are aligned or quantified against the pig reference genome and gene annotation.
+Clean RNA-seq reads are aligned to the pig reference genome using STAR, and gene-level read counts are generated from the aligned BAM files using featureCounts.
 
 Typical outputs include:
 
@@ -68,29 +68,52 @@ Rows represent genes and columns represent RNA-seq samples.
 
 ### 4. Expression filtering
 
-Lowly expressed genes are removed before normalization and eQTL mapping.
+Lowly expressed genes are removed before normalization and eQTL mapping. Filtering is performed separately for each tissue.
 
-Typical filtering criteria may include:
+The expression thresholds used in this study were:
 
-- remove genes with very low counts across most samples
-- retain genes expressed in a sufficient number of individuals within each tissue
-- keep only genes with valid genomic coordinates for eQTL phenotype BED construction
+```python
+count_threshold = 6
+tpm_threshold = 0.1
+sample_frac_threshold = 0.2
+sample_count_threshold = 10
+```
 
-Filtering should be performed separately for each tissue.
+Genes were retained if they satisfied both expression criteria in a sufficient number of samples:
+
+```text
+TPM >= 0.1 and read count >= 6 in at least 20% of samples
+```
+
+A minimum of 10 samples was also required when applying the sample-count threshold. In practice, the required number of samples was defined as the larger value between 20% of the tissue sample size and 10 samples.
 
 ### 5. Expression normalization
 
-Gene expression values are normalized to reduce library-size and distributional differences among samples.
+After expression filtering, gene expression levels were quantile-normalized for downstream cis-eQTL mapping.
+
+In this study, quantile normalization was performed in R using the `qqnorm` function. For each gene, expression values across samples were transformed to normal quantiles.
+
+Example R code:
+
+```r
+qqnorm_normalize <- function(x) {
+    if (all(is.na(x))) return(x)
+    r <- rank(x, ties.method = "average", na.last = "keep")
+    qnorm((r - 0.5) / sum(!is.na(x)))
+}
+
+expr_qn <- t(apply(expr_matrix, 1, qqnorm_normalize))
+```
 
 Common outputs include:
 
 ```text
-TMM-normalized expression matrix
 TPM expression matrix
+filtered expression matrix
 quantile-normalized expression matrix
 ```
 
-For cis-eQTL mapping, normalized expression values are further transformed to approximate a normal distribution when required.
+The quantile-normalized matrix is used to prepare the phenotype BED file for cis-eQTL mapping.
 
 ### 6. Phenotype BED preparation for OmiGA
 
@@ -125,7 +148,7 @@ Typical outputs from this module include:
 per-sample RNA-seq QC summaries
 gene read count matrices
 TPM expression matrices
-TMM-normalized expression matrices
+filtered expression matrices
 quantile-normalized expression matrices
 OmiGA-compatible expression BED files
 expression PCA or t-SNE result files
@@ -164,6 +187,7 @@ install.packages(c("data.table", "dplyr", "tidyr"))
 ## Notes
 
 - Expression processing should be performed separately for each tissue.
+- Genes were retained with TPM >= 0.1 and read count >= 6 in at least 20% of samples, with a minimum of 10 samples.
+- Quantile normalization of gene expression levels was performed using the `qqnorm` function in R.
 - Sample IDs must be consistent between genotype files, expression matrices, covariate files, and phenotype BED files.
 - Gene coordinates in the phenotype BED file must match the genome build used for genotype data.
-- Low-expression filtering and normalization parameters may need to be adjusted according to tissue sample size and RNA-seq depth.
