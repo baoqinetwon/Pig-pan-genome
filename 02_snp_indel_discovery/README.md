@@ -60,29 +60,29 @@ For ONT long-read data, SNPs and Indels are detected using Clair3:
 
 The ONT workflow includes two steps:
 
-1. Align ONT reads to the reference genome using `minimap2 -x map-ont`
+1. Align ONT reads to the reference genome using NGMLR
 2. Call SNPs and Indels using Clair3 with an ONT model
 
 Example ONT alignment command:
 
 ```bash
-minimap2 \
-    -ax map-ont \
+ngmlr \
     -t 52 \
-    /path/to/Duroc.fa \
-    sample.ont.fastq.gz \
+    -r /path/to/Duroc.fa \
+    -q sample.ont.fastq.gz \
+    -x ont \
 | samtools sort \
     -@ 52 \
-    -o 01_bam/sample.ont.minimap2.bam
+    -o 01_bam/sample.ont.ngmlr.bam
 
-samtools index -@ 52 01_bam/sample.ont.minimap2.bam
+samtools index -@ 52 01_bam/sample.ont.ngmlr.bam
 ```
 
 Example Clair3 command:
 
 ```bash
 run_clair3.sh \
-    --bam_fn=01_bam/sample.ont.minimap2.bam \
+    --bam_fn=01_bam/sample.ont.ngmlr.bam \
     --ref_fn=/path/to/Duroc.fa \
     --threads=52 \
     --platform=ont \
@@ -94,9 +94,9 @@ run_clair3.sh \
 
 - Long-read FASTQ files, including PacBio HiFi or ONT reads
 - Reference genome FASTA, for example `Duroc.fa`
-- pbmm2/minimap2 index for HiFi alignment, for example `Duroc.mmi`
+- pbmm2 index for HiFi alignment, for example `Duroc.mmi`
 - DeepVariant GPU Singularity image for PacBio HiFi SNP/Indel calling
-- Clair3 and ONT model for ONT SNP/Indel calling
+- NGMLR, Clair3, and ONT model for ONT SNP/Indel calling
 
 ## Outputs
 
@@ -104,7 +104,7 @@ run_clair3.sh \
 
 ```bash
 01_bam/${SAMPLE}_pbmm.bam
-01_bam/${SAMPLE}.ont.minimap2.bam
+01_bam/${SAMPLE}.ont.ngmlr.bam
 ```
 
 - SNP/Indel calling results:
@@ -116,10 +116,10 @@ run_clair3.sh \
 
 ## Software installation
 
-For ONT SNP calling, Clair3 and GLnexus can be installed as follows:
+For ONT SNP calling, NGMLR, Clair3, and GLnexus can be installed as follows:
 
 ```bash
-conda create -n snp_indel -c conda-forge -c bioconda clair3=1.1.0 glnexus=1.4.1
+conda create -n snp_indel -c conda-forge -c bioconda ngmlr=0.2.7 clair3=1.1.0 glnexus=1.4.1 samtools
 ```
 
 For PacBio HiFi SNP/Indel calling, DeepVariant is usually run with the official Docker or Singularity image. pbmm2 can be installed with conda:
@@ -131,6 +131,7 @@ conda install -c bioconda pbmm2
 ## Notes
 
 - PacBio HiFi SNP/Indel calling uses DeepVariant with the `PACBIO` model.
-- ONT SNP/Indel calling uses Clair3 with `--platform=ont`.
+- ONT reads are aligned with NGMLR before Clair3 SNP/Indel calling.
+- Clair3 is run with `--platform=ont` for ONT SNP/Indel calling.
 - GPU acceleration for DeepVariant is enabled by adding `--nv` to `singularity exec`.
 - Replace sample names, reference paths, index paths, Singularity image paths, and Clair3 model paths according to the local computing environment.
