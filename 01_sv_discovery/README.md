@@ -125,7 +125,55 @@ For PacBio CCS/HiFi data:
 
 ### 3. Assembly-based SV discovery
 
-Assembly-based SV discovery scripts are used to identify SVs from genome assemblies and compare read-based and assembly-based SV discovery results.
+`assembly_based_sv_detection.sh` detects structural variants by aligning each assembled genome to the reference genome with nucmer and calling assembly-based variants with Assemblytics. The Assemblytics BED output is then converted with SURVIVOR for downstream VCF-based analyses.
+
+The workflow contains three steps:
+
+1. Align each genome assembly to the reference with nucmer using `--maxmatch -l 500 -c 500`
+2. Detect 50–100,500 bp assembly-based variants with Assemblytics
+3. Convert the Assemblytics structural-variant BED file with `SURVIVOR convertAssemblytics`
+
+Input assemblies must be FASTA files placed directly under `ASSEMBLY_DIR`:
+
+```text
+accession_genome/
+├── sample1.fa
+├── sample2.fa
+└── sample3.fa
+```
+
+The sample name is taken from the part of the FASTA filename before the first period. For example, `sample1.hap1.fa` is assigned the sample name `sample1`.
+
+Example usage:
+
+```bash
+REF=/path/to/Duroc.fa \
+ASSEMBLY_DIR=/path/to/accession_genome \
+THREADS=56 \
+ASSEMBLYTICS=/path/to/Assemblytics-1.2.1/scripts/Assemblytics \
+bash assembly_based_sv_detection.sh
+```
+
+The main adjustable parameters are:
+
+```text
+UNIQUE_ANCHOR_LENGTH=500
+MIN_VARIANT_SIZE=50
+MAX_VARIANT_SIZE=100500
+SURVIVOR_MIN_SIZE=50
+```
+
+For each assembly, the main intermediate and output files are:
+
+```text
+${sample}.delta
+${sample}.Assemblytics_structural_variants.bed
+${sample}
+```
+
+Here, `${sample}.delta` is the nucmer alignment, `${sample}.Assemblytics_structural_variants.bed` contains the Assemblytics calls, and `${sample}` is the SURVIVOR-converted output filename specified by the current script.
+
+Outputs are written to the directory from which the script is executed. Use a separate working directory if the input directory contains many assemblies or if existing files with the same sample prefixes must be preserved.
 
 ## Software installation
 
