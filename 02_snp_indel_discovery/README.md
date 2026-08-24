@@ -21,21 +21,22 @@ Set `READ_TYPE=HIFI` or `READ_TYPE=ONT` before running.
 
 For PacBio HiFi data, the workflow includes two steps:
 
-1. Align HiFi reads to the reference genome using `pbmm2 align --preset HIFI`
+1. Align HiFi reads to the reference genome using `NGMLR` with the PacBio preset (`-x pacbio`)
 2. Call SNPs and Indels from the sorted BAM file using DeepVariant with `--model_type=PACBIO`
 
 Example alignment command:
 
 ```bash
-pbmm2 align \
-    --preset HIFI \
-    -j 52 \
-    --sort \
-    --sort-threads 52 \
-    --sample BMA \
-    /path/to/Duroc.mmi \
-    BMA_hifi.fastq.gz \
-    01_bam/BMA_pbmm.bam
+ngmlr \
+    -t 52 \
+    -r /path/to/Duroc.fa \
+    -q BMA_hifi.fastq.gz \
+    -x pacbio \
+| samtools sort \
+    -@ 52 \
+    -o 01_bam/BMA.hifi.ngmlr.bam
+
+samtools index -@ 52 01_bam/BMA.hifi.ngmlr.bam
 ```
 
 Example DeepVariant command using GPU Singularity image:
@@ -45,7 +46,7 @@ singularity exec --nv --network=none -n deepvariant-gpu.1.4.0.sif \
     run_deepvariant \
     --model_type=PACBIO \
     --ref=/path/to/Duroc.fa \
-    --reads=01_bam/BMA_pbmm.bam \
+    --reads=01_bam/BMA.hifi.ngmlr.bam \
     --output_vcf=02_variant_calling/BMA.hifi.deepvariant.vcf.gz \
     --num_shards=52
 ```
@@ -94,7 +95,6 @@ run_clair3.sh \
 
 - Long-read FASTQ files, including PacBio HiFi or ONT reads
 - Reference genome FASTA, for example `Duroc.fa`
-- pbmm2 index for HiFi alignment, for example `Duroc.mmi`
 - DeepVariant GPU Singularity image for PacBio HiFi SNP/Indel calling
 - NGMLR, Clair3, and ONT model for ONT SNP/Indel calling
 
@@ -103,7 +103,7 @@ run_clair3.sh \
 - Sorted BAM files:
 
 ```bash
-01_bam/${SAMPLE}_pbmm.bam
+01_bam/${SAMPLE}.hifi.ngmlr.bam
 01_bam/${SAMPLE}.ont.ngmlr.bam
 ```
 
@@ -116,21 +116,17 @@ run_clair3.sh \
 
 ## Software installation
 
-For ONT SNP calling, NGMLR, Clair3, and GLnexus can be installed as follows:
+NGMLR is used for both PacBio HiFi and ONT alignment. NGMLR, Clair3, and GLnexus can be installed as follows:
 
 ```bash
 conda create -n snp_indel -c conda-forge -c bioconda ngmlr=0.2.7 clair3=1.1.0 glnexus=1.4.1 samtools
 ```
 
-For PacBio HiFi SNP/Indel calling, DeepVariant is usually run with the official Docker or Singularity image. pbmm2 can be installed with conda:
-
-```bash
-conda install -c bioconda pbmm2
-```
+For PacBio HiFi SNP/Indel calling, DeepVariant is usually run with the official Docker or Singularity image.
 
 ## Notes
 
-- PacBio HiFi SNP/Indel calling uses DeepVariant with the `PACBIO` model.
+- PacBio HiFi reads are aligned with NGMLR using `-x pacbio`, and SNP/Indel calling uses DeepVariant with the `PACBIO` model.
 - ONT reads are aligned with NGMLR before Clair3 SNP/Indel calling.
 - Clair3 is run with `--platform=ont` for ONT SNP/Indel calling.
 - GPU acceleration for DeepVariant is enabled by adding `--nv` to `singularity exec`.
