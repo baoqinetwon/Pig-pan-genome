@@ -16,7 +16,7 @@ set -euo pipefail
 #   - Sniffles2
 #   - cuteSV
 #   - Debreak
-#   - IRIS polishing for Debreak VCFs, optional
+#   - IRIS polishing for all four caller VCFs, optional
 #   - SURVIVOR merge across callers
 #
 # Input BAM list format:
@@ -33,7 +33,7 @@ READ_TYPE=${READ_TYPE:-HIFI}       # HIFI or CLR
 MIN_SIZE=${MIN_SIZE:-50}
 MIN_SUPPORT=${MIN_SUPPORT:-10}
 DEBREAK_DEPTH=${DEBREAK_DEPTH:-111}
-RUN_IRIS=${RUN_IRIS:-0}            # set to 1 to polish Debreak VCFs with IRIS
+RUN_IRIS=${RUN_IRIS:-0}            # set to 1 to polish all four caller VCFs with IRIS
 RUN_SURVIVOR=${RUN_SURVIVOR:-1}    # set to 1 to merge caller VCFs with SURVIVOR
 
 mkdir -p ${OUTDIR}/{pbsv,sniffles2,cutesv,debreak,iris,survivor,tmp}
@@ -152,22 +152,37 @@ while read -r sample bam
         --ref ${REF}
 
     # ------------------------------------------------------------
-    # 5. Optional IRIS polishing for Debreak sequence-resolved VCF
+    # 5. Optional IRIS polishing for all four caller VCFs
     # ------------------------------------------------------------
 
+    debreak_vcf=$(find ${OUTDIR}/debreak/${sample} -name "*debreak_seq.vcf" | head -n 1 || true)
+
+    caller_names=(pbsv sniffles2 cutesv debreak)
+    caller_vcfs=(
+        ${OUTDIR}/pbsv/${sample}.pbsv.vcf
+        ${OUTDIR}/sniffles2/${sample}.sniffles2.vcf
+        ${OUTDIR}/cutesv/${sample}.cutesv.vcf
+        ${debreak_vcf}
+    )
+
     if [[ ${RUN_IRIS} -eq 1 ]]; then
-        debreak_vcf=$(find ${OUTDIR}/debreak/${sample} -name "*debreak_seq.vcf" | head -n 1 || true)
-        if [[ -n "${debreak_vcf}" ]]; then
-            iris \
-                genome_in=${REF} \
-                vcf_in=${debreak_vcf} \
-                reads_in=${bam} \
-                vcf_out=${OUTDIR}/iris/${sample}.polished.debreak.vcf \
-                --pacbio \
-                --rerunracon
-        else
-            echo "WARNING: no Debreak sequence VCF found for ${sample}; skip IRIS polishing." >&2
-        fi
+        for i in "${!caller_names[@]}"; do
+            caller=${caller_names[${i}]}
+            caller_vcf=${caller_vcfs[${i}]}
+            polished_vcf=${OUTDIR}/iris/${sample}.${caller}.polished.vcf
+
+            if [[ -n "${caller_vcf}" && -s "${caller_vcf}" ]]; then
+                iris \
+                    genome_in=${REF} \
+                    vcf_in=${caller_vcf} \
+                    reads_in=${bam} \
+                    vcf_out=${polished_vcf} \
+                    --pacbio \
+                    --rerunracon
+            else
+                echo "WARNING: no ${caller} VCF found for ${sample}; skip IRIS polishing." >&2
+            fi
+        done
     fi
 
     # ------------------------------------------------------------
@@ -178,16 +193,17 @@ while read -r sample bam
         merge_list=${OUTDIR}/survivor/${sample}.vcf.list
         : > ${merge_list}
 
-        [[ -s ${OUTDIR}/pbsv/${sample}.pbsv.vcf ]] && echo ${OUTDIR}/pbsv/${sample}.pbsv.vcf >> ${merge_list}
-        [[ -s ${OUTDIR}/sniffles2/${sample}.sniffles2.vcf ]] && echo ${OUTDIR}/sniffles2/${sample}.sniffles2.vcf >> ${merge_list}
-        [[ -s ${OUTDIR}/cutesv/${sample}.cutesv.vcf ]] && echo ${OUTDIR}/cutesv/${sample}.cutesv.vcf >> ${merge_list}
+        for i in "${!caller_names[@]}"; do
+            caller=${caller_names[${i}]}
+            caller_vcf=${caller_vcfs[${i}]}
+            polished_vcf=${OUTDIR}/iris/${sample}.${caller}.polished.vcf
 
-        if [[ ${RUN_IRIS} -eq 1 && -s ${OUTDIR}/iris/${sample}.polished.debreak.vcf ]]; then
-            echo ${OUTDIR}/iris/${sample}.polished.debreak.vcf >> ${merge_list}
-        else
-            debreak_vcf=$(find ${OUTDIR}/debreak/${sample} -name "*.vcf" | head -n 1 || true)
-            [[ -n "${debreak_vcf}" ]] && echo ${debreak_vcf} >> ${merge_list}
-        fi
+            if [[ ${RUN_IRIS} -eq 1 && -s "${polished_vcf}" ]]; then
+                echo ${polished_vcf} >> ${merge_list}
+            elif [[ -n "${caller_vcf}" && -s "${caller_vcf}" ]]; then
+                echo ${caller_vcf} >> ${merge_list}
+            fi
+        done
 
         SURVIVOR merge \
             ${merge_list} \
