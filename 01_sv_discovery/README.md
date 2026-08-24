@@ -57,7 +57,7 @@ The workflow includes multiple SV callers and merging steps:
 - Sniffles2
 - cuteSV
 - Debreak
-- optional IRIS polishing for Debreak VCFs
+- optional IRIS polishing for VCFs from all four callers
 - SURVIVOR merge across callers
 
 PacBio HiFi reads are aligned to the reference genome with NGMLR using `-x pacbio` before SV calling.
@@ -99,6 +99,7 @@ ${OUTDIR}/pbsv/${sample}.pbsv.vcf
 ${OUTDIR}/sniffles2/${sample}.sniffles2.vcf
 ${OUTDIR}/cutesv/${sample}.cutesv.vcf
 ${OUTDIR}/debreak/${sample}/
+${OUTDIR}/iris/${sample}.{pbsv,sniffles2,cutesv,debreak}.polished.vcf
 ${OUTDIR}/survivor/${sample}.merged.vcf
 ```
 
