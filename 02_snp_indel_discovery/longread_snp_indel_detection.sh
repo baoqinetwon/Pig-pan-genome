@@ -6,7 +6,7 @@ set -euo pipefail
 # ============================================================
 # Workflow:
 #   PacBio HiFi:
-#     1. Align HiFi reads using pbmm2 --preset HIFI
+#     1. Align HiFi reads using NGMLR -x pacbio
 #     2. Call SNPs/Indels using DeepVariant --model_type=PACBIO
 #
 #   Oxford Nanopore Technologies (ONT):
@@ -20,7 +20,6 @@ THREADS=${THREADS:-52}
 
 SAMPLE=${SAMPLE:-BMA}
 REF_FA=${REF_FA:-/public/home/baoqi/assembly/Duroc/Duroc.fa}
-REF_MMI=${REF_MMI:-/public/home/baoqi/assembly/Duroc/Duroc.mmi}
 FASTQ=${FASTQ:-BMA_hifi.fastq.gz}
 
 BAM_DIR=${BAM_DIR:-01_bam}
@@ -42,20 +41,19 @@ case ${READ_TYPE} in
         echo "Running PacBio HiFi SNP/Indel detection for ${SAMPLE}"
 
         # ------------------------------------------------------------
-        # 1. Align HiFi reads with pbmm2
+        # 1. Align HiFi reads with NGMLR
         # ------------------------------------------------------------
 
-        pbmm2 align \
-            --preset HIFI \
-            -j ${THREADS} \
-            --sort \
-            --sort-threads ${THREADS} \
-            --sample ${SAMPLE} \
-            ${REF_MMI} \
-            ${FASTQ} \
-            ${BAM_DIR}/${SAMPLE}_pbmm.bam
+        ngmlr \
+            -t ${THREADS} \
+            -r ${REF_FA} \
+            -q ${FASTQ} \
+            -x pacbio \
+        | samtools sort \
+            -@ ${THREADS} \
+            -o ${BAM_DIR}/${SAMPLE}.hifi.ngmlr.bam
 
-        samtools index -@ ${THREADS} ${BAM_DIR}/${SAMPLE}_pbmm.bam
+        samtools index -@ ${THREADS} ${BAM_DIR}/${SAMPLE}.hifi.ngmlr.bam
 
         # ------------------------------------------------------------
         # 2. SNP/Indel calling with DeepVariant GPU
@@ -66,7 +64,7 @@ case ${READ_TYPE} in
             run_deepvariant \
             --model_type=PACBIO \
             --ref=${REF_FA} \
-            --reads=${BAM_DIR}/${SAMPLE}_pbmm.bam \
+            --reads=${BAM_DIR}/${SAMPLE}.hifi.ngmlr.bam \
             --output_vcf=${VCF_DIR}/${SAMPLE}.hifi.deepvariant.vcf.gz \
             --num_shards=${THREADS}
         ;;
