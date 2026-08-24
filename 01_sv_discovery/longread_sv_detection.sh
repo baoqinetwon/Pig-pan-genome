@@ -13,7 +13,6 @@ set -euo pipefail
 #
 # SV callers included:
 #   - pbsv
-#   - SVIM
 #   - Sniffles2
 #   - cuteSV
 #   - Debreak
@@ -37,7 +36,7 @@ DEBREAK_DEPTH=${DEBREAK_DEPTH:-111}
 RUN_IRIS=${RUN_IRIS:-0}            # set to 1 to polish Debreak VCFs with IRIS
 RUN_SURVIVOR=${RUN_SURVIVOR:-1}    # set to 1 to merge caller VCFs with SURVIVOR
 
-mkdir -p ${OUTDIR}/{pbsv,svim,sniffles2,cutesv,debreak,iris,survivor,tmp}
+mkdir -p ${OUTDIR}/{pbsv,sniffles2,cutesv,debreak,iris,survivor,tmp}
 
 # Platform-specific cuteSV parameters
 case ${READ_TYPE} in
@@ -106,19 +105,7 @@ while read -r sample bam
         ${OUTDIR}/pbsv/${sample}.pbsv.vcf
 
     # ------------------------------------------------------------
-    # 2. SVIM
-    # ------------------------------------------------------------
-
-    svim alignment \
-        ${OUTDIR}/svim/${sample} \
-        ${bam} \
-        ${REF} \
-        --min_sv_size ${MIN_SIZE} \
-        --symbolic_alleles \
-        --sample ${sample}
-
-    # ------------------------------------------------------------
-    # 3. Sniffles2
+    # 2. Sniffles2
     # ------------------------------------------------------------
 
     sniffles \
@@ -133,7 +120,7 @@ while read -r sample bam
         --vcf ${OUTDIR}/sniffles2/${sample}.sniffles2.vcf
 
     # ------------------------------------------------------------
-    # 4. cuteSV
+    # 3. cuteSV
     # ------------------------------------------------------------
 
     cuteSV \
@@ -150,7 +137,7 @@ while read -r sample bam
         --diff_ratio_merging_DEL ${CUTESV_DEL_RATIO}
 
     # ------------------------------------------------------------
-    # 5. Debreak
+    # 4. Debreak
     # ------------------------------------------------------------
 
     debreak \
@@ -165,7 +152,7 @@ while read -r sample bam
         --ref ${REF}
 
     # ------------------------------------------------------------
-    # 6. Optional IRIS polishing for Debreak sequence-resolved VCF
+    # 5. Optional IRIS polishing for Debreak sequence-resolved VCF
     # ------------------------------------------------------------
 
     if [[ ${RUN_IRIS} -eq 1 ]]; then
@@ -184,7 +171,7 @@ while read -r sample bam
     fi
 
     # ------------------------------------------------------------
-    # 7. SURVIVOR merge across callers
+    # 6. SURVIVOR merge across callers
     # ------------------------------------------------------------
 
     if [[ ${RUN_SURVIVOR} -eq 1 ]]; then
@@ -194,7 +181,6 @@ while read -r sample bam
         [[ -s ${OUTDIR}/pbsv/${sample}.pbsv.vcf ]] && echo ${OUTDIR}/pbsv/${sample}.pbsv.vcf >> ${merge_list}
         [[ -s ${OUTDIR}/sniffles2/${sample}.sniffles2.vcf ]] && echo ${OUTDIR}/sniffles2/${sample}.sniffles2.vcf >> ${merge_list}
         [[ -s ${OUTDIR}/cutesv/${sample}.cutesv.vcf ]] && echo ${OUTDIR}/cutesv/${sample}.cutesv.vcf >> ${merge_list}
-        [[ -s ${OUTDIR}/svim/${sample}/variants.vcf ]] && echo ${OUTDIR}/svim/${sample}/variants.vcf >> ${merge_list}
 
         if [[ ${RUN_IRIS} -eq 1 && -s ${OUTDIR}/iris/${sample}.polished.debreak.vcf ]]; then
             echo ${OUTDIR}/iris/${sample}.polished.debreak.vcf >> ${merge_list}
