@@ -5,7 +5,7 @@ set -euo pipefail
 # PacBio long-read SV detection
 # ============================================================
 # This script performs per-sample SV detection from PacBio long-read
-# alignments using multiple callers.
+# NGMLR alignments using multiple callers.
 #
 # Supported PacBio read types:
 #   READ_TYPE=HIFI  : PacBio CCS/HiFi data
@@ -21,10 +21,10 @@ set -euo pipefail
 #   - SURVIVOR merge across callers
 #
 # Input BAM list format:
-#   sample_id    path/to/sample.sorted.bam
+#   sample_id    path/to/sample.hifi.ngmlr.bam
 #
 # Example:
-#   AW           AW_own.sorted.bam
+#   AW           AW.hifi.ngmlr.bam
 
 BAM_LIST=${BAM_LIST:-bam.list}
 REF=${REF:-/path/to/Duroc.fa}
