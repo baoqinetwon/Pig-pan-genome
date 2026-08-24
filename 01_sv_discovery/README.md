@@ -54,7 +54,6 @@ READ_TYPE=CLR
 The workflow includes multiple SV callers and merging steps:
 
 - pbsv
-- SVIM
 - Sniffles2
 - cuteSV
 - Debreak
@@ -97,7 +96,6 @@ Main outputs:
 
 ```bash
 ${OUTDIR}/pbsv/${sample}.pbsv.vcf
-${OUTDIR}/svim/${sample}/variants.vcf
 ${OUTDIR}/sniffles2/${sample}.sniffles2.vcf
 ${OUTDIR}/cutesv/${sample}.cutesv.vcf
 ${OUTDIR}/debreak/${sample}/
