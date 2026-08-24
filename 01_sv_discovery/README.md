@@ -61,13 +61,15 @@ The workflow includes multiple SV callers and merging steps:
 - optional IRIS polishing for Debreak VCFs
 - SURVIVOR merge across callers
 
+PacBio HiFi reads are aligned to the reference genome with NGMLR using `-x pacbio` before SV calling.
+
 Input BAM list format:
 
 ```text
-sample_id    path/to/sample.sorted.bam
+sample_id    path/to/sample.hifi.ngmlr.bam
 ```
 
-A one-column BAM list is also supported; in that case, the sample name is inferred from the BAM filename.
+A one-column BAM list is also supported; in that case, the sample name is inferred from the BAM filename. HiFi BAM files should be coordinate-sorted and indexed.
 
 Example usage for PacBio HiFi data:
 
