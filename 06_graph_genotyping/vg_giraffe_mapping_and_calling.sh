@@ -16,9 +16,7 @@ done
 ls ./*_R1.clean.fq.gz | while read i; do
     i=${i/_R1.clean.fq.gz/}
     vg giraffe \
-        --fragment-mean 200 \
-        --fragment-stdev 28 \
-        -t 96 \
+         -t 16 \
         -Z /path/to/PGG.giraffe.gbz \
         -m /path/to/PGG.min \
         -d /path/to/PGG.dist \
